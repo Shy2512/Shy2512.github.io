@@ -131,15 +131,12 @@
         let currentArticleId = null; // 当前文章ID
 
         // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. 验证登录状态
-            const currentUser = localStorage.getItem('currentUser');
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentUser = AV.User.current(); // 替换为leanCloud的登录检查
             if (!currentUser) {
                 window.location.href = 'login.html';
                 return;
             }
-
-            // 2. 获取URL中的文章ID（从首页点击传递过来）
             const urlParams = new URLSearchParams(window.location.search);
             currentArticleId = urlParams.get('id');
             if (!currentArticleId) {
@@ -147,27 +144,19 @@
                 window.location.href = 'home.html';
                 return;
             }
-
-            // 3. 加载文章详情
-            loadArticleDetail(currentUser);
+            await loadArticleDetail(); // 改为异步调用
         });
-
         // 加载文章详情
-        function loadArticleDetail(username) {
-            const userArticlesKey = `articles_${username}`;
-            const userArticles = JSON.parse(localStorage.getItem(userArticlesKey) || '[]');
-            // 查找当前ID对应的文章
-            const article = userArticles.find(art => art.id.toString() === currentArticleId);
-
-            if (!article) {
+        async function loadArticleDetail() {
+            try {
+                const article = AV.Object.createWithoutData('Article', currentArticleId);
+                await article.fetch(); // 从云端获取详情
+                document.getElementById('articleTitle').textContent = article.get('title');
+                document.getElementById('articleContent').textContent = article.get('content') || '（无正文内容）';
+            } catch (err) {
                 alert('文章不存在或已被删除');
                 window.location.href = 'home.html';
-                return;
             }
-
-            // 填充页面内容
-            document.getElementById('articleTitle').textContent = article.title;
-            document.getElementById('articleContent').textContent = article.content || '（无正文内容）';
         }
 
         // 编辑按钮：跳转到编辑页（携带文章ID）
