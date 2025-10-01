@@ -177,77 +177,58 @@
 
     <script>
         // 验证登录状态
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentUser = localStorage.getItem('currentUser');
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查登录状态（leanCloud方式）
+            const currentUser = AV.User.current();
             if (!currentUser) {
-                // 未登录则跳回登录页
                 window.location.href = 'login.html';
                 return;
             }
-            // 检查是否有文章ID（用于编辑已有文章）
+            // 检查是否为编辑模式
             const urlParams = new URLSearchParams(window.location.search);
             const editArticleId = urlParams.get('id');
             if (editArticleId) {
-                // 加载待编辑的文章内容
-                loadArticleForEdit(editArticleId);
+                await loadArticleForEdit(editArticleId); // 改为异步
             }
-
-            // 新增函数：加载待编辑的文章
-            function loadArticleForEdit(articleId) {
-                const currentUser = localStorage.getItem('currentUser');
-                if (!currentUser) return;
-
-                const userArticlesKey = `articles_${currentUser}`;
-                const userArticles = JSON.parse(localStorage.getItem(userArticlesKey) || '[]');
-                const article = userArticles.find(art => art.id.toString() === articleId);
-
-                if (article) {
-                    document.getElementById('articleTitle').value = article.title;
-                    document.getElementById('articleContent').value = article.content || '';
-                    // 存储当前编辑的文章ID（用于保存时更新）
-                    window.editArticleId = articleId;
-                }
+        
+            // 加载待编辑文章（从leanCloud获取）
+            async function loadArticleForEdit(articleId) {
+                const article = AV.Object.createWithoutData('Article', articleId);
+                await article.fetch(); // 从云端获取详情
+                document.getElementById('articleTitle').value = article.get('title');
+                document.getElementById('articleContent').value = article.get('content');
+                window.editArticleId = articleId;
             }
-
-            // 修改保存按钮逻辑（支持新增和编辑）
-            document.getElementById('saveBtn').addEventListener('click', () => {
+        
+            // 保存按钮逻辑（替换为leanCloud版本）
+            document.getElementById('saveBtn').addEventListener('click', async () => {
                 const title = document.getElementById('articleTitle').value.trim();
                 const content = document.getElementById('articleContent').value.trim();
-
-                if (!title) {
-                    alert('请输入文章标题');
+                const user = AV.User.current();
+                if (!user || !title) {
+                    alert('请输入标题');
                     return;
                 }
-
-                const currentUser = localStorage.getItem('currentUser');
-                if (!currentUser) return;
-
-                const userArticlesKey = `articles_${currentUser}`;
-                let userArticles = JSON.parse(localStorage.getItem(userArticlesKey) || '[]');
-
-                if (window.editArticleId) {
-                    // 编辑已有文章：更新内容
-                    const index = userArticles.findIndex(art => art.id.toString() === window.editArticleId);
-                    if (index !== -1) {
-                        userArticles[index] = {
-                            ...userArticles[index], // 保留原ID和创建时间
-                            title: title,
-                            content: content
-                        };
+        
+                try {
+                    if (window.editArticleId) {
+                        // 更新已有文章
+                        const article = AV.Object.createWithoutData('Article', window.editArticleId);
+                        article.set('title', title);
+                        article.set('content', content);
+                        await article.save();
+                    } else {
+                        // 新增文章
+                        const article = new AV.Object('Article');
+                        article.set('title', title);
+                        article.set('content', content);
+                        article.set('author', user); // 关联当前用户
+                        await article.save();
                     }
-                } else {
-                    // 新增文章：创建新对象
-                    userArticles.unshift({
-                        id: Date.now(),
-                        title: title,
-                        content: content,
-                        createdAt: new Date().toISOString()
-                    });
+                    window.location.href = 'home.html';
+                } catch (err) {
+                    alert('保存失败：' + err.message);
                 }
-
-                // 保存并返回首页
-                localStorage.setItem(userArticlesKey, JSON.stringify(userArticles));
-                window.location.href = 'home.html';
             });
         });
 
