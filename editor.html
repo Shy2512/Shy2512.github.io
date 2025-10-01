@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章编辑页</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            padding: 30px; /* 卡片周围留白 */
+            background-image: url('https://cdn.luogu.com.cn/upload/image_hosting/lz40zqee.png'); /* 紫色背景图 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* 主编辑卡片 */
+        .editor-card {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-height: calc(100vh - 60px); /* 减去页面留白 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 页面标题 */
+        .page-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* 文章标题输入区 */
+        .title-input-container {
+            margin-bottom: 20px;
+        }
+
+        .title-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        #articleTitle {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1em;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #articleTitle:focus {
+            border-color: #1a365d;
+        }
+
+        /* 正文编辑区 */
+        .content-editor-container {
+            flex: 1; /* 占满剩余空间 */
+            margin-bottom: 25px;
+        }
+
+        .content-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        #articleContent {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #articleContent:focus {
+            border-color: #1a365d;
+        }
+
+        /* 底部按钮区（蓝色按钮） */
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .editor-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn {
+            background-color: #ddd;
+            color: #333;
+        }
+
+        .cancel-btn:hover {
+            background-color: #ccc;
+        }
+
+        .save-btn {
+            background-color: #1a365d; /* 蓝色按钮 */
+            color: white;
+        }
+
+        .save-btn:hover {
+            background-color: #2c5282;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-card">
+        <h2 class="page-title">编辑页</h2>
+
+        <!-- 文章标题输入 -->
+        <div class="title-input-container">
+            <label for="articleTitle" class="title-label">文章题目</label>
+            <input type="text" id="articleTitle" placeholder="请输入文章标题">
+        </div>
+
+        <!-- 正文编辑区 -->
+        <div class="content-editor-container">
+            <label for="articleContent" class="content-label">正文</label>
+            <textarea id="articleContent" placeholder="请输入文章正文..."></textarea>
+        </div>
+
+        <!-- 底部操作按钮 -->
+        <div class="button-group">
+            <button class="editor-btn cancel-btn" id="cancelBtn">
+                <i class="fas fa-times"></i> 取消
+            </button>
+            <button class="editor-btn save-btn" id="saveBtn">
+                <i class="fas fa-save"></i> 保存
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 验证登录状态
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                // 未登录则跳回登录页
+                window.location.href = 'login.html';
+                return;
+            }
+            // 检查是否有文章ID（用于编辑已有文章）
+            const urlParams = new URLSearchParams(window.location.search);
+            const editArticleId = urlParams.get('id');
+            if (editArticleId) {
+                // 加载待编辑的文章内容
+                loadArticleForEdit(editArticleId);
+            }
+
+            // 新增函数：加载待编辑的文章
+            function loadArticleForEdit(articleId) {
+                const currentUser = localStorage.getItem('currentUser');
+                if (!currentUser) return;
+
+                const userArticlesKey = `articles_${currentUser}`;
+                const userArticles = JSON.parse(localStorage.getItem(userArticlesKey) || '[]');
+                const article = userArticles.find(art => art.id.toString() === articleId);
+
+                if (article) {
+                    document.getElementById('articleTitle').value = article.title;
+                    document.getElementById('articleContent').value = article.content || '';
+                    // 存储当前编辑的文章ID（用于保存时更新）
+                    window.editArticleId = articleId;
+                }
+            }
+
+            // 修改保存按钮逻辑（支持新增和编辑）
+            document.getElementById('saveBtn').addEventListener('click', () => {
+                const title = document.getElementById('articleTitle').value.trim();
+                const content = document.getElementById('articleContent').value.trim();
+
+                if (!title) {
+                    alert('请输入文章标题');
+                    return;
+                }
+
+                const currentUser = localStorage.getItem('currentUser');
+                if (!currentUser) return;
+
+                const userArticlesKey = `articles_${currentUser}`;
+                let userArticles = JSON.parse(localStorage.getItem(userArticlesKey) || '[]');
+
+                if (window.editArticleId) {
+                    // 编辑已有文章：更新内容
+                    const index = userArticles.findIndex(art => art.id.toString() === window.editArticleId);
+                    if (index !== -1) {
+                        userArticles[index] = {
+                            ...userArticles[index], // 保留原ID和创建时间
+                            title: title,
+                            content: content
+                        };
+                    }
+                } else {
+                    // 新增文章：创建新对象
+                    userArticles.unshift({
+                        id: Date.now(),
+                        title: title,
+                        content: content,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                // 保存并返回首页
+                localStorage.setItem(userArticlesKey, JSON.stringify(userArticles));
+                window.location.href = 'home.html';
+            });
+        });
+
+        // 取消按钮：返回首页
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            window.location.href = 'home.html';
+        });
+    </script>
+</body>
+</html>
