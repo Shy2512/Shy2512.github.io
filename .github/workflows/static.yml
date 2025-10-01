@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            font-family: "Poppins", sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background-image: url('https://cdn.luogu.com.cn/upload/image_hosting/xi2h93ye.png');
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+            }
+
+        .wrapper {
+                  position: relative;
+                  width: 400px;
+                  height: 450px;
+                  background: rgba(62, 64, 77, 0.3); 
+                  border: 2px solid rgba(255, 255, 255, 0.1);
+                  border-radius: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  backdrop-filter: blur(15px);
+                  transition: all 0.3s ease;
+                }
+                  
+                .wrapper:hover {
+                  box-shadow: 0 0 40px rgba(255,255,255,0.3);
+                  background: rgba(70, 71, 78, 0.8);
+                  border: 2px solid rgba(255, 255, 255, 0.1);
+                }
+
+        .wrapper h1 {
+            font-size: 2em;
+            color: #fff;
+            text-align: center;
+        }
+
+        .wrapper .input-box {
+            position: relative;
+            width: 310px;
+            margin: 30px 0;
+            border-bottom: 2px solid #fff;
+        }
+
+        .wrapper .input-box input {
+            width: 100%;
+            height: 50px;
+            background: transparent;
+            outline: none;
+            border: none;
+            font-size: 1em;
+            color: #fff;
+            padding: 0 40px 0 5px;
+        }
+
+        .wrapper .input-box label {
+            position: absolute;
+            top: 50%;
+            left: 5px;
+            transform: translateY(-50%);
+            font-size: 1em;
+            color: #fff;
+            pointer-events: none;
+            transition: 0.5s;
+        }
+
+        .wrapper .input-box input:focus ~ label,
+        .wrapper .input-box input:valid ~ label {
+            top: -5px;
+        }
+
+        .wrapper .input-box .icon {
+            position: absolute;
+            right: 8px;
+            color: #fff;
+            font-size: 1.2em;
+            line-height: 57px;
+        }
+
+        .wrapper .row {
+            margin: -15px 0 15px;
+            font-size: 0.9em;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wrapper .row label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .wrapper .row a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .wrapper .row a:hover {
+            text-decoration: underline;
+        }
+
+        .wrapper .btn {
+            width: 100%;
+            height: 40px;
+            background: #fff;
+            outline: none;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: #000;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+          
+        .btn:hover {
+            background: #ffffea;
+        }
+
+        .wrapper .signup-link {
+            font-size: 0.9em;
+            color: #fff;
+            text-align: center;
+            margin: 25px 0 10px;
+        }
+
+        .wrapper .signup-link a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer; /* 让链接看起来更像一个可点击的按钮 */
+        }
+
+        .wrapper .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #ff5252;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            min-height: 18px;
+        }
+
+        .success-message {
+            color: #4ade80; /* 绿色 */
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+            min-height: 18px;
+        }
+
+        @media (max-width: 360px) {
+            .wrapper {
+                width: 100%;
+                height: 100vh;
+                border: none;
+                border-radius: 0px;
+            }
+
+            .wrapper .input-box {
+                width: 290px;
+            }
+        }
+
+        /* --- 新增：注册模态框样式 --- */
+        .modal {
+            display: none; /* 默认隐藏 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
+            z-index: 1000; /* 确保在最上层 */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: rgba(62, 64, 77, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            width: 400px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            position: relative; /* 为关闭按钮定位 */
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="wrapper">
+        <form id="loginForm" action="#">
+            <h1>登录</h1>
+            <div class="input-box">
+                <i class="fas fa-user icon"></i>
+                <input id="usernameInput" type="text" required />
+                <label>用户名</label>
+            </div>
+            <div class="input-box">
+                <i class="fas fa-lock icon"></i>
+                <input id="passwordInput" type="password" required />
+                <label>密码</label>
+            </div>
+
+            <div class="row">
+                <label>
+                    <input type="checkbox" id="rememberMe"> 记住我
+                </label>
+                <a href="#" id="forgotPassword">忘记密码？</a>
+            </div>
+            
+            <div class="error-message" id="loginError"></div>
+
+            <button type="submit" class="btn">登录</button>
+
+            <div class="signup-link">
+                <p>没有账号？<a id="showSignup">注册一个。</a></p>
+            </div>
+        </form>
+    </div>
+
+    <!-- --- 新增：注册模态框 HTML --- -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <form id="signupForm">
+                <h1>注册</h1>
+                <div class="input-box">
+                    <i class="fas fa-user-plus icon"></i>
+                    <input id="newUsername" type="text" required />
+                    <label>新用户名</label>
+                </div>
+                <div class="input-box">
+                    <i class="fas fa-lock icon"></i>
+                    <input id="newPassword" type="password" required />
+                    <label>新密码</label>
+                </div>
+                <div class="input-box">
+                    <i class="fas fa-lock icon"></i>
+                    <input id="confirmPassword" type="password" required />
+                    <label>确认密码</label>
+                </div>
+                
+                <div class="error-message" id="signupError"></div>
+                <div class="success-message" id="signupSuccess"></div>
+
+                <button type="submit" class="btn">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- IndexedDB Setup (无需修改) ---
+        const dbName = "UserDB";
+        const dbVersion = 1;
+        let db;
+
+        const request = indexedDB.open(dbName, dbVersion);
+
+        request.onupgradeneeded = event => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains('users')) {
+                const store = db.createObjectStore('users', { keyPath: 'id', autoIncrement: true });
+                store.createIndex('username', 'username', { unique: true });
+            }
+        };
+
+        request.onsuccess = event => {
+            db = event.target.result;
+            console.log("IndexedDB opened successfully");
+            checkAndAddDefaultAdmin();
+        };
+
+        request.onerror = event => {
+            console.error("IndexedDB error:", event.target.error);
+        };
+
+        function addUser(username, password) {
+            const tx = db.transaction('users', 'readwrite');
+            const store = tx.objectStore('users');
+            store.add({ username, password }); // 注意：实际应用中应存储哈希后的密码！
+        }
+
+        function getUser(username) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('users', 'readonly');
+                const store = tx.objectStore('users');
+                const index = store.index('username');
+                const req = index.get(username);
+
+                req.onsuccess = () => {
+                    resolve(req.result);
+                };
+
+                req.onerror = () => {
+                    reject(req.error);
+                };
+            });
+        }
+        
+        async function checkAndAddDefaultAdmin() {
+            const adminExists = await getUser('Admin');
+            if (!adminExists) {
+                console.log("Adding default admin user.");
+                addUser('Admin', 'Pass');
+            }
+        }
+
+        // --- Login Logic (无需修改) ---
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('usernameInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginError = document.getElementById('loginError');
+        const forgotPasswordLink = document.getElementById('forgotPassword');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            loginError.textContent = '';
+
+            if (!username || !password) {
+                loginError.textContent = '请填写所有字段。';
+                return;
+            }
+
+            try {
+                const user = await getUser(username);
+                // login.html 中登录成功的逻辑
+                if (user && user.password === password) {
+                    // 存储当前登录用户（关键）
+                    localStorage.setItem('currentUser', username);
+                    // 跳转到主页
+                    window.location.href = 'home.html';
+                } else {
+                    loginError.textContent = '用户名或密码无效。';
+                    passwordInput.value = '';
+                }
+            } catch (error) {
+                console.error('登录时出错：', error);
+                loginError.textContent = '发生错误，请重试。';
+            }
+        });
+
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            // alert('请发送邮件至3150674475@qq.com申请密码重置');
+            alert('你没救了');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const rememberedUser = localStorage.getItem('rememberedUser');
+            if (rememberedUser) {
+                usernameInput.value = rememberedUser;
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
+
+        // --- 新增：注册逻辑 ---
+        const signupModal = document.getElementById('signupModal');
+        const showSignupLink = document.getElementById('showSignup');
+        const closeBtn = document.querySelector('.close-btn');
+        const signupForm = document.getElementById('signupForm');
+        const signupError = document.getElementById('signupError');
+        const signupSuccess = document.getElementById('signupSuccess');
+
+        // 打开注册模态框
+        showSignupLink.addEventListener('click', () => {
+            signupModal.style.display = 'flex';
+            // 重置表单和消息
+            signupForm.reset();
+            signupError.textContent = '';
+            signupSuccess.textContent = '';
+        });
+
+        // 关闭注册模态框
+        closeBtn.addEventListener('click', () => {
+            signupModal.style.display = 'none';
+        });
+
+        // 点击模态框外部区域也关闭
+        window.addEventListener('click', (e) => {
+            if (e.target === signupModal) {
+                signupModal.style.display = 'none';
+            }
+        });
+
+        // 处理注册表单提交
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const newUsername = document.getElementById('newUsername').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // 重置消息
+            signupError.textContent = '';
+            signupSuccess.textContent = '';
+
+            // 前端验证
+            if (!newUsername || !newPassword || !confirmPassword) {
+                signupError.textContent = '请填写所有字段。';
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                signupError.textContent = '密码至少6个字符。';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                signupError.textContent = '密码不匹配。';
+                return;
+            }
+
+            try {
+                // 检查用户名是否已存在
+                const existingUser = await getUser(newUsername);
+                if (existingUser) {
+                    signupError.textContent = '用户名已存在。';
+                    return;
+                }
+
+                // 如果用户名不存在，则添加新用户
+                addUser(newUsername, newPassword);
+                console.log('用户注册成功：', newUsername);
+                
+                signupSuccess.textContent = '注册成功！您现在可以登录了。';
+                
+                // 1.5秒后自动关闭模态框
+                setTimeout(() => {
+                    signupModal.style.display = 'none';
+                }, 1500);
+
+            } catch (error) {
+                console.error('注册时出错：', error);
+                signupError.textContent = '发生错误，请重试。';
+            }
+        });
+    </script>
+</body>
+</html>
