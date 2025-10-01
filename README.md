@@ -1,3 +1,1 @@
-## 云剪贴板
-
-https://shy2512.github.io/home.html
+## [备忘录](https://shy2512.github.io/home.html)
