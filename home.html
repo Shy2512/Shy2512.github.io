@@ -190,46 +190,43 @@
         let currentUser = ''; // 当前登录用户
         let userArticles = []; // 当前用户的文章数组
 
-        // 初始化：验证登录状态并加载用户数据
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. 验证登录状态（必须登录才能访问主页）
-            currentUser = localStorage.getItem('currentUser');
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查登录状态（leanCloud方式）
+            const currentUser = AV.User.current();
             if (!currentUser) {
-                // 未登录则跳回登录页
                 window.location.href = 'login.html';
                 return;
             }
-
-            // 2. 显示当前用户名
-            document.getElementById('username').textContent = currentUser;
-
-            // 3. 加载当前用户的文章（数据与用户绑定）
-            loadUserArticles();
-
-            // 4. 渲染文章和分页
+            // 显示用户名
+            document.getElementById('username').textContent = currentUser.getUsername();
+            // 加载文章（从leanCloud获取）
+            await loadUserArticles();
             renderArticles();
             updatePagination();
             showCurrentPageArticles();
-
-            // 5. 绑定退出登录事件
-            document.querySelector('.logout-btn').addEventListener('click', () => {
-                localStorage.removeItem('currentUser'); // 清除登录状态
-                window.location.href = 'login.html'; // 跳回登录页
+            // 退出登录（leanCloud方式）
+            document.querySelector('.logout-btn').addEventListener('click', async () => {
+                await AV.User.logOut();
+                window.location.href = 'login.html';
             });
         });
-
-        // 加载当前用户的文章（从localStorage读取，键与用户名绑定）
-        function loadUserArticles() {
-            const savedData = localStorage.getItem(`articles_${currentUser}`);
-            if (savedData) {
-                userArticles = JSON.parse(savedData);
-            } else {
-                // 新用户初始化空文章列表
-                userArticles = [];
-                saveUserArticles();
-            }
+        //文章加载
+        async function loadUserArticles() {
+            const user = AV.User.current();
+            if (!user) return;
+            // 查询当前用户的文章
+            const query = new AV.Query('Article');
+            query.equalTo('author', user); // 关联当前用户
+            query.descending('createdAt'); // 按创建时间倒序
+            const articles = await query.find();
+            // 转换为本地可用格式
+            userArticles = articles.map(article => ({
+                id: article.id,
+                title: article.get('title'),
+                content: article.get('content'),
+                createdAt: article.get('createdAt')
+            }));
         }
-
         // 保存当前用户的文章（存储键与用户名绑定，确保数据隔离）
         function saveUserArticles() {
             localStorage.setItem(`articles_${currentUser}`, JSON.stringify(userArticles));
@@ -254,11 +251,14 @@
                 articlesList.appendChild(articleItem);
 
                 // 绑定删除事件（仅删除当前用户的文章）
-                articleItem.querySelector('.article-action').addEventListener('click', function() {
-                    if (confirm('确定要删除这篇文章吗?')) {
-                        const articleId = parseInt(this.parentElement.dataset.id);
-                        userArticles = userArticles.filter(art => art.id !== articleId);
-                        saveUserArticles(); // 保存当前用户的文章
+                articleItem.querySelector('.article-action').addEventListener('click', async function() {
+                    if (confirm('确定删除？')) {
+                        const articleId = this.parentElement.dataset.id;
+                        // 调用leanCloud删除接口
+                        const article = AV.Object.createWithoutData('Article', articleId);
+                        await article.destroy();
+                        // 重新加载列表
+                        await loadUserArticles();
                         renderArticles();
                         updatePagination();
                         showCurrentPageArticles();
