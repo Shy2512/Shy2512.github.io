@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <!-- 引入 LeanCloud SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.13.0/dist/av-min.js"></script>
+    <script>
+      // 初始化（替换为你的 App ID、App Key、服务器地址）
+      AV.init({
+        appId: "2NKkhrjq5fASWO7uUBEdUmhx-gzGzoHsz",  // 例如："xxx1234567890abcdef"
+        appKey: "f0bSP44t9btEynsOfqGZBzvV", // 例如："xxx1234567890abcdef"
+        serverURL: "https://2nkkhrjq.lc-cn-n1-shared.com" // 例如："https://abcdef.leancloud.cn"
+      });
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文章详情</title>
